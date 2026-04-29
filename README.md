@@ -673,3 +673,342 @@ You should see:
    ElectronDemo-1.0.0-arm64-mac.zip
    latest-mac.yml          ← this is what auto-updater reads
 ```
+
+
+/Applications/ElectronDemo.app/Contents/MacOS/ElectronDemo
+defaults read /Applications/ElectronDemo.app/Contents/Info.plist CFBundleShortVersionString
+curl -s https://api.github.com/repos/dhruvitestwork-lab/electron-test-demo/releases/latest | grep tag_name
+/Applications/ElectronDemo.app/Contents/MacOS/ElectronDemo
+
+
+
+<!-- working in dev  -->
+
+Diagnosed unsigned Mac app update failure, identified manual installation workaround needed
+Diagnosed unsigned Mac app update failure, identified manual installation workaround needed
+The download works ✅ but quitAndInstall always fails on unsigned Mac apps. The solution is to completely bypass Squirrel and do the install ourselves using a shell script.
+
+But first — you need to reinstall the app from scratch because the currently installed app has old code. Follow all steps below.
+
+Step 1 — Delete old installed app
+bash
+rm -rf /Applications/ElectronDemo.app
+rm -rf ~/Library/Caches/electron-demo-updater
+Step 2 — Full electron/main.ts
+typescript
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { autoUpdater } from 'electron-updater';
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+
+const isDev = !app.isPackaged;
+let mainWindow: BrowserWindow | null = null;
+let updateDownloaded = false;
+let downloadedVersion = '';
+
+// ─── Window ───────────────────────────────────────────────────────────────────
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:3000');
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+  }
+  mainWindow.on('closed', () => { mainWindow = null; });
+}
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+function send(channel: string, payload?: any) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, payload);
+  }
+}
+
+// ─── Find cached ZIP ──────────────────────────────────────────────────────────
+function findCachedZip(version: string): string | null {
+  const cacheDir = path.join(
+    os.homedir(), 'Library', 'Caches',
+    'electron-demo-updater', 'pending'
+  );
+
+  console.log('[updater] looking in cache dir:', cacheDir);
+
+  if (!fs.existsSync(cacheDir)) {
+    console.log('[updater] cache dir not found');
+    return null;
+  }
+
+  const files = fs.readdirSync(cacheDir);
+  console.log('[updater] files in cache:', files);
+
+  // Check specific names first
+  const candidates = [
+    `ElectronDemo-${version}-mac.zip`,
+    `ElectronDemo-${version}-arm64-mac.zip`,
+  ];
+
+  for (const name of candidates) {
+    const full = path.join(cacheDir, name);
+    if (fs.existsSync(full)) {
+      console.log('[updater] found:', full);
+      return full;
+    }
+  }
+
+  // Fallback — any zip with this version
+  const found = files.find(f => f.includes(version) && f.endsWith('.zip'));
+  if (found) {
+    const full = path.join(cacheDir, found);
+    console.log('[updater] fallback found:', full);
+    return full;
+  }
+
+  console.log('[updater] no zip found for version:', version);
+  return null;
+}
+
+// ─── Install via shell script ─────────────────────────────────────────────────
+function installViaScript(zipPath: string) {
+  const extractDir = path.join(os.tmpdir(), 'electron-update-' + Date.now());
+  const appDest = '/Applications/ElectronDemo.app';
+  const scriptPath = path.join(os.tmpdir(), 'electron-install.sh');
+
+  const script = [
+    '#!/bin/bash',
+    'sleep 2',                                          // wait for app to quit
+    `rm -rf "${extractDir}"`,
+    `mkdir -p "${extractDir}"`,
+    `unzip -o "${zipPath}" -d "${extractDir}"`,         // extract zip
+    `rm -rf "${appDest}"`,                              // remove old app
+    `cp -R "${extractDir}/ElectronDemo.app" "/Applications/"`, // install new
+    `rm -rf "${extractDir}"`,                           // cleanup
+    `open "${appDest}"`,                                // launch new app
+  ].join('\n');
+
+  fs.writeFileSync(scriptPath, script, { mode: 0o755 });
+  console.log('[updater] install script:', scriptPath);
+  console.log('[updater] zip path:', zipPath);
+
+  const child = spawn('bash', [scriptPath], {
+    detached: true,
+    stdio: 'ignore',
+  });
+  child.unref();
+
+  // Quit current app after 500ms
+  setTimeout(() => app.exit(0), 500);
+}
+
+// ─── Auto Updater ─────────────────────────────────────────────────────────────
+function setupAutoUpdater() {
+  if (isDev) return;
+
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  setTimeout(() => autoUpdater.checkForUpdates().catch(console.error), 3000);
+  setInterval(() => autoUpdater.checkForUpdates().catch(console.error), 30 * 60 * 1000);
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[updater] checking...');
+    send('update:checking');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[updater] update available:', info.version);
+    updateDownloaded = false;
+    downloadedVersion = '';
+    send('update:available', {
+      version: info.version,
+      releaseNotes: info.releaseNotes ?? null,
+      releaseDate: info.releaseDate ?? null,
+    });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[updater] up to date');
+    send('update:not-available');
+  });
+
+  autoUpdater.on('download-progress', (p) => {
+    console.log('[updater] progress:', Math.round(p.percent) + '%');
+    send('update:download-progress', {
+      percent: Math.round(p.percent),
+      transferred: p.transferred,
+      total: p.total,
+      bytesPerSecond: p.bytesPerSecond,
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[updater] downloaded version:', info.version);
+    updateDownloaded = true;
+    downloadedVersion = info.version;
+    send('update:downloaded', {
+      version: info.version,
+      releaseNotes: info.releaseNotes ?? null,
+    });
+  });
+
+  // IMPORTANT: ignore code signature error — we handle install ourselves
+  autoUpdater.on('error', (err) => {
+    console.error('[updater] error:', err.message);
+    if (
+      err.message.includes('code signature') ||
+      err.message.includes('Could not get code')
+    ) {
+      console.log('[updater] ignoring signature error, using manual install');
+      return; // do NOT send to renderer
+    }
+    send('update:error', { message: err.message });
+  });
+}
+
+// ─── IPC ──────────────────────────────────────────────────────────────────────
+function setupIpc() {
+  ipcMain.on('update:start-download', () => {
+    if (isDev) {
+      let percent = 0;
+      const iv = setInterval(() => {
+        percent += 10;
+        send('update:download-progress', {
+          percent,
+          transferred: percent * 1024 * 100,
+          total: 1024 * 1000,
+          bytesPerSecond: 1024 * 500,
+        });
+        if (percent >= 100) {
+          clearInterval(iv);
+          setTimeout(() => {
+            updateDownloaded = true;
+            downloadedVersion = '99.0.0';
+            send('update:downloaded', { version: '99.0.0', releaseNotes: null });
+          }, 300);
+        }
+      }, 400);
+    } else {
+      autoUpdater.downloadUpdate().catch((err) => {
+        send('update:error', { message: err.message });
+      });
+    }
+  });
+
+  ipcMain.on('update:install-now', () => {
+    console.log('[updater] install-now received, downloaded:', updateDownloaded, 'version:', downloadedVersion);
+
+    if (isDev) {
+      send('update:relaunch-soon');
+      setTimeout(() => { app.relaunch(); app.quit(); }, 500);
+      return;
+    }
+
+    if (!updateDownloaded || !downloadedVersion) {
+      send('update:error', { message: 'Update not ready. Please wait.' });
+      return;
+    }
+
+    const zipPath = findCachedZip(downloadedVersion);
+    console.log('[updater] zip path found:', zipPath);
+
+    if (zipPath && fs.existsSync(zipPath)) {
+      send('update:relaunch-soon');
+      installViaScript(zipPath);
+    } else {
+      // Last resort — open GitHub releases page
+      console.log('[updater] zip not found, opening GitHub');
+      shell.openExternal(
+        'https://github.com/dhruvitestwork-lab/electron-test-demo/releases/latest'
+      );
+      send('update:manual-install', { path: null });
+    }
+  });
+
+  ipcMain.on('update:dismiss', () => {});
+
+  ipcMain.on('update:open-url', (_e, url: string) => {
+    shell.openExternal(url);
+  });
+
+  ipcMain.on('update:check-manually', () => {
+    if (isDev) {
+      setTimeout(() => {
+        send('update:available', {
+          version: '99.0.0',
+          releaseNotes: 'Simulated update.',
+          releaseDate: new Date().toISOString(),
+        });
+      }, 500);
+    } else {
+      autoUpdater.checkForUpdates().catch(console.error);
+    }
+  });
+}
+
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
+app.whenReady().then(() => {
+  createWindow();
+  setupIpc();
+  setupAutoUpdater();
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+Step 3 — Bump version and publish
+bash
+# In package.json → "version": "1.0.7"
+npm run dist:publish
+
+# Publish draft on GitHub
+Step 4 — Install v1.0.7 fresh (important!)
+bash
+# Open release folder
+open release/
+
+# Install ElectronDemo-1.0.7-arm64.dmg (M1/M2/M3)
+# OR ElectronDemo-1.0.7.dmg (Intel)
+# Drag to Applications
+Step 5 — Publish v1.0.8 as the update
+bash
+# In package.json → "version": "1.0.8"
+npm run dist:publish
+
+# Publish draft on GitHub
+Step 6 — Test
+bash
+# Clear old cache first
+rm -rf ~/Library/Caches/electron-demo-updater
+
+# Open installed v1.0.7 from Applications
+# Wait 3 seconds → popup appears → Download → Restart & Install
+# App quits → script runs → new app installs → relaunches ✅
+What happens now
+Click "Restart & Install"
+        ↓
+Find zip in ~/Library/Caches/electron-demo-updater/pending/
+        ↓
+Write /tmp/electron-install.sh:
+  sleep 2
+  unzip ElectronDemo-1.0.8-mac.zip → /tmp/
+  rm -rf /Applications/ElectronDemo.app
+  cp new app → /Applications/
+  open /Applications/ElectronDemo.app
+        ↓
+Run script detached (survives quit)
+        ↓
+app.exit(0) — current app quits
+        ↓
+Script runs → new app installs → opens ✅

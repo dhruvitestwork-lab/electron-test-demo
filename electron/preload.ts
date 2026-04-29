@@ -1,44 +1,73 @@
-// import { contextBridge } from 'electron'
+// // import { contextBridge } from 'electron'
 
-// contextBridge.exposeInMainWorld('api', {
-//   ping: () => 'Hello from Electron TS 👋',
-// })
+// // contextBridge.exposeInMainWorld('api', {
+// //   ping: () => 'Hello from Electron TS 👋',
+// // })
 
+// import { contextBridge, ipcRenderer } from 'electron';
+
+// type Cb = (...args: any[]) => void;
+
+// const on = (channel: string, cb: Cb) => {
+//   ipcRenderer.on(channel, (_event, ...args) => cb(...args));
+// };
+
+// contextBridge.exposeInMainWorld('electronUpdater', {
+//   // ── Listeners (main → renderer) ─────────────────────────────────────────────
+//   onChecking:         (cb: Cb) => on('update:checking', cb),
+//   onAvailable:        (cb: Cb) => on('update:available', cb),
+//   onNotAvailable:     (cb: Cb) => on('update:not-available', cb),
+//   onDownloadProgress: (cb: Cb) => on('update:download-progress', cb),
+//   onDownloaded:       (cb: Cb) => on('update:downloaded', cb),
+//   onError:            (cb: Cb) => on('update:error', cb),
+//   onRelaunchSoon:     (cb: Cb) => on('update:relaunch-soon', cb), // NEW
+
+//   // ── Senders (renderer → main) ────────────────────────────────────────────────
+//   startDownload:   () => ipcRenderer.send('update:start-download'),
+//   installNow:      () => ipcRenderer.send('update:install-now'),
+//   dismiss:         () => ipcRenderer.send('update:dismiss'),
+//   checkManually:   () => ipcRenderer.send('update:check-manually'),
+//   openUrl:         (url: string) => ipcRenderer.send('update:open-url', url),
+
+//   // ── Cleanup ──────────────────────────────────────────────────────────────────
+//   removeAllListeners: () => {
+//     [
+//       'update:checking',
+//       'update:available',
+//       'update:not-available',
+//       'update:download-progress',
+//       'update:downloaded',
+//       'update:error',
+//       'update:relaunch-soon', // NEW
+//     ].forEach((ch) => ipcRenderer.removeAllListeners(ch));
+//   },
+// });
 import { contextBridge, ipcRenderer } from 'electron';
 
 type Cb = (...args: any[]) => void;
-
 const on = (channel: string, cb: Cb) => {
   ipcRenderer.on(channel, (_event, ...args) => cb(...args));
 };
 
 contextBridge.exposeInMainWorld('electronUpdater', {
-  // ── Listeners (main → renderer) ─────────────────────────────────────────────
   onChecking:         (cb: Cb) => on('update:checking', cb),
   onAvailable:        (cb: Cb) => on('update:available', cb),
   onNotAvailable:     (cb: Cb) => on('update:not-available', cb),
   onDownloadProgress: (cb: Cb) => on('update:download-progress', cb),
   onDownloaded:       (cb: Cb) => on('update:downloaded', cb),
   onError:            (cb: Cb) => on('update:error', cb),
-  onRelaunchSoon:     (cb: Cb) => on('update:relaunch-soon', cb), // NEW
-
-  // ── Senders (renderer → main) ────────────────────────────────────────────────
-  startDownload:   () => ipcRenderer.send('update:start-download'),
-  installNow:      () => ipcRenderer.send('update:install-now'),
-  dismiss:         () => ipcRenderer.send('update:dismiss'),
-  checkManually:   () => ipcRenderer.send('update:check-manually'),
-  openUrl:         (url: string) => ipcRenderer.send('update:open-url', url),
-
-  // ── Cleanup ──────────────────────────────────────────────────────────────────
+  onRelaunchSoon:     (cb: Cb) => on('update:relaunch-soon', cb),
+  onManualInstall:    (cb: Cb) => on('update:manual-install', cb),
+  startDownload:      () => ipcRenderer.send('update:start-download'),
+  installNow:         () => ipcRenderer.send('update:install-now'),
+  dismiss:            () => ipcRenderer.send('update:dismiss'),
+  checkManually:      () => ipcRenderer.send('update:check-manually'),
+  openUrl:    (url: string) => ipcRenderer.send('update:open-url', url),
   removeAllListeners: () => {
     [
-      'update:checking',
-      'update:available',
-      'update:not-available',
-      'update:download-progress',
-      'update:downloaded',
-      'update:error',
-      'update:relaunch-soon', // NEW
+      'update:checking', 'update:available', 'update:not-available',
+      'update:download-progress', 'update:downloaded', 'update:error',
+      'update:relaunch-soon', 'update:manual-install',
     ].forEach((ch) => ipcRenderer.removeAllListeners(ch));
   },
 });

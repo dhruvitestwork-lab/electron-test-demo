@@ -4,7 +4,9 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 import UpdateNotification from './components/UpdateNotification'
-import StatsCard from './components/StatsCard'
+import DashboardCards from './components/DashboardCards'
+import AdvancedDashboard from './components/AdvancedDashboard'
+import UserProfileCard from './components/UserProfileCard'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -21,7 +23,9 @@ function App() {
         {/* Always render this — it shows automatically when update is found */}
         <UpdateNotification />
       </div>
-      <StatsCard/>
+      <UserProfileCard />
+      <DashboardCards/>
+      <AdvancedDashboard/>
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
