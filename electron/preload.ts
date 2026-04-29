@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('electronUpdater', {
   onDownloadProgress: (cb: Cb) => on('update:download-progress', cb),
   onDownloaded:       (cb: Cb) => on('update:downloaded', cb),
   onError:            (cb: Cb) => on('update:error', cb),
+  onRelaunchSoon:     (cb: Cb) => on('update:relaunch-soon', cb), // NEW
 
   // ── Senders (renderer → main) ────────────────────────────────────────────────
   startDownload:   () => ipcRenderer.send('update:start-download'),
@@ -37,6 +38,7 @@ contextBridge.exposeInMainWorld('electronUpdater', {
       'update:download-progress',
       'update:downloaded',
       'update:error',
+      'update:relaunch-soon', // NEW
     ].forEach((ch) => ipcRenderer.removeAllListeners(ch));
   },
 });
