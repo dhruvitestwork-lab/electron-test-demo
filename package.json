@@ -1,7 +1,7 @@
 {
   "name": "electron-demo",
   "private": true,
-  "version": "1.0.13",
+  "version": "1.0.14",
   "main": "electron-dist/main.cjs",
   "scripts": {
     "check-version": "node -e \"const p=require('./package.json');console.log('Current version:',p.version)\"",
@@ -11,7 +11,8 @@
     "build": "tsc -b && vite build",
     "build:electron": "tsc -p tsconfig.electron.json && node -e \"require('fs').renameSync('electron-dist/main.js','electron-dist/main.cjs')\"",
     "dist": "npm run build && npm run build:electron && electron-builder",
-    "dist:publish": "npm run build && npm run build:electron && electron-builder --publish always",
+    "dist:mac": "npm run build && npm run build:electron && electron-builder --mac",
+    "dist:publish": "npm run build && npm run build:electron && electron-builder --mac --publish always",
     "preview": "vite preview"
   },
   "dependencies": {
