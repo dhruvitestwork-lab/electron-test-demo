@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const StatsCard: React.FC = () => {
   const [hover, setHover] = useState<boolean>(false);

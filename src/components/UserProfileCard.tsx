@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const UserProfileCard: React.FC = () => {
   const [isFollowing, setIsFollowing] = useState(false);

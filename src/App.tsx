@@ -7,6 +7,12 @@ import UpdateNotification from './components/UpdateNotification'
 import DashboardCards from './components/DashboardCards'
 import AdvancedDashboard from './components/AdvancedDashboard'
 import UserProfileCard from './components/UserProfileCard'
+import AnalyticsSection from './components/AnalyticsSection'
+import PremiumFeatureSection from './components/PremiumFeatureSection'
+import SmartWorkspaceSection from './components/SmartWorkspaceSection'
+import TestimonialsSection from './components/TestimonialsSection'
+import UpdateCenterSection from './components/UpdateCenterSection'
+import PricingSection from './components/PricingSection'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -23,9 +29,15 @@ function App() {
         {/* Always render this — it shows automatically when update is found */}
         <UpdateNotification />
       </div>
+     <PremiumFeatureSection />
+      <SmartWorkspaceSection/>
+      <TestimonialsSection />
+      <UpdateCenterSection />
+      <PricingSection />
+      <AnalyticsSection />
       <UserProfileCard />
-      <DashboardCards/>
-      <AdvancedDashboard/>
+      <DashboardCards />
+      <AdvancedDashboard />
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
