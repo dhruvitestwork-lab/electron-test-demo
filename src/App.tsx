@@ -13,6 +13,7 @@ import SmartWorkspaceSection from './components/SmartWorkspaceSection'
 import TestimonialsSection from './components/TestimonialsSection'
 import UpdateCenterSection from './components/UpdateCenterSection'
 import PricingSection from './components/PricingSection'
+import SmartAppsSection from './components/SmartAppsSection'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -30,6 +31,7 @@ function App() {
         <UpdateNotification />
       </div>
      <PremiumFeatureSection />
+     <SmartAppsSection/>
       <SmartWorkspaceSection/>
       <TestimonialsSection />
       <UpdateCenterSection />

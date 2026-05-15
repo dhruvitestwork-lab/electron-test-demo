@@ -318,6 +318,16 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
 
+// Auto-clear cache on every startup so update modal always shows
+  const cacheDir = path.join(
+    os.homedir(), 'Library', 'Caches',
+    'electron-demo-updater'
+  );
+  if (fs.existsSync(cacheDir)) {
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+    console.log('[updater] cache cleared on startup');
+  }
+
   setTimeout(() => autoUpdater.checkForUpdates().catch(console.error), 3000);
   setInterval(() => autoUpdater.checkForUpdates().catch(console.error), 30 * 60 * 1000);
 
@@ -425,7 +435,8 @@ function setupIpc() {
     if (zipPath && fs.existsSync(zipPath)) {
       send('update:relaunch-soon');
       installViaScript(zipPath);
-    } else {
+    } 
+    else {
       // Last resort — open GitHub releases page
       console.log('[updater] zip not found, opening GitHub');
       shell.openExternal(
