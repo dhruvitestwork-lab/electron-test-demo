@@ -14,6 +14,7 @@ import TestimonialsSection from './components/TestimonialsSection'
 import UpdateCenterSection from './components/UpdateCenterSection'
 import PricingSection from './components/PricingSection'
 import SmartAppsSection from './components/SmartAppsSection'
+import ActivityTimelineSection from './components/ActivityTimelineSection'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -30,6 +31,7 @@ function App() {
         {/* Always render this — it shows automatically when update is found */}
         <UpdateNotification />
       </div>
+      <ActivityTimelineSection/>
      <PremiumFeatureSection />
      <SmartAppsSection/>
       <SmartWorkspaceSection/>
