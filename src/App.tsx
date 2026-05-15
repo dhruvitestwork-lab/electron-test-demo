@@ -15,6 +15,8 @@ import UpdateCenterSection from './components/UpdateCenterSection'
 import PricingSection from './components/PricingSection'
 import SmartAppsSection from './components/SmartAppsSection'
 import ActivityTimelineSection from './components/ActivityTimelineSection'
+import PricingDashboardSection from './components/PricingDashboardSection'
+import FloatingChatWidget from './components/FloatingChatWidget'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -22,7 +24,7 @@ function App() {
   return (
     <>
       <div className="app">
-        
+
         {/* For DEV testing only — remove in production */}
         <button onClick={() => window.electronUpdater?.checkManually()}>
           Check for Update (Dev Test)
@@ -31,13 +33,15 @@ function App() {
         {/* Always render this — it shows automatically when update is found */}
         <UpdateNotification />
       </div>
-      <ActivityTimelineSection/>
-     <PremiumFeatureSection />
-     <SmartAppsSection/>
-      <SmartWorkspaceSection/>
+      <FloatingChatWidget/>
+      <ActivityTimelineSection />
+      <PremiumFeatureSection />
+      <SmartAppsSection />
+      <SmartWorkspaceSection />
       <TestimonialsSection />
       <UpdateCenterSection />
       <PricingSection />
+      <PricingDashboardSection />
       <AnalyticsSection />
       <UserProfileCard />
       <DashboardCards />
