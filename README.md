@@ -1012,3 +1012,10 @@ Run script detached (survives quit)
 app.exit(0) — current app quits
         ↓
 Script runs → new app installs → opens ✅
+
+
+
+git add .
+git commit -m "version 19"
+npm version patch
+git push origin main --tags
