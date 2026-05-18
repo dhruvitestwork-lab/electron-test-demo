@@ -1,7 +1,7 @@
 {
   "name": "electron-demo",
   "private": true,
-  "version": "1.0.30",
+  "version": "1.0.26",
   "main": "electron-dist/main.cjs",
   "scripts": {
     "check-version": "node -e \"const p=require('./package.json');console.log('Current version:',p.version)\"",
