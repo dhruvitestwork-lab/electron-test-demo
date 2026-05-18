@@ -18,6 +18,7 @@ import ActivityTimelineSection from './components/ActivityTimelineSection'
 import PricingDashboardSection from './components/PricingDashboardSection'
 import FloatingChatWidget from './components/FloatingChatWidget'
 import FloatingNotificationCenter from './components/FloatingNotificationCenter'
+import SmartServerMonitor from './components/SmartServerMonitor'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -34,6 +35,7 @@ function App() {
         {/* Always render this — it shows automatically when update is found */}
         <UpdateNotification />
       </div>
+      <SmartServerMonitor/>
       <FloatingChatWidget/>
       <FloatingNotificationCenter/>
       <ActivityTimelineSection />
