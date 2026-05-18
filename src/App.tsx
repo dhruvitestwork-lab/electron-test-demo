@@ -17,6 +17,7 @@ import SmartAppsSection from './components/SmartAppsSection'
 import ActivityTimelineSection from './components/ActivityTimelineSection'
 import PricingDashboardSection from './components/PricingDashboardSection'
 import FloatingChatWidget from './components/FloatingChatWidget'
+import FloatingNotificationCenter from './components/FloatingNotificationCenter'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -34,6 +35,7 @@ function App() {
         <UpdateNotification />
       </div>
       <FloatingChatWidget/>
+      <FloatingNotificationCenter/>
       <ActivityTimelineSection />
       <PremiumFeatureSection />
       <SmartAppsSection />
