@@ -12,7 +12,6 @@
     "build:electron": "tsc -p tsconfig.electron.json && node -e \"require('fs').renameSync('electron-dist/main.js','electron-dist/main.cjs')\"",
     "dist": "npm run build && npm run build:electron && electron-builder",
     "dist:mac": "npm run build && npm run build:electron && electron-builder --mac",
-    "dist:win": "npm run build && npm run build:electron && electron-builder --win",
     "dist:publish": "npm run build && npm run build:electron && electron-builder --mac --publish always",
     "preview": "vite preview"
   },
