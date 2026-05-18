@@ -209,6 +209,7 @@ const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
 let updateDownloaded = false;
 let downloadedVersion = '';
+let downloadedZipPath = '';
 
 // ─── Window ───────────────────────────────────────────────────────────────────
 function createWindow() {
@@ -366,6 +367,8 @@ function setupAutoUpdater() {
     console.log('[updater] downloaded version:', info.version);
     updateDownloaded = true;
     downloadedVersion = info.version;
+    downloadedZipPath = (info as any).downloadedFile ?? '';
+    console.log('[updater] downloaded file path:', downloadedZipPath);
     send('update:downloaded', {
       version: info.version,
       releaseNotes: info.releaseNotes ?? null,
@@ -429,7 +432,10 @@ function setupIpc() {
       return;
     }
 
-    const zipPath = findCachedZip(downloadedVersion);
+    // const zipPath = findCachedZip(downloadedVersion);
+     const zipPath = (downloadedZipPath && fs.existsSync(downloadedZipPath))
+      ? downloadedZipPath
+      : findCachedZip(downloadedVersion);
     console.log('[updater] zip path found:', zipPath);
 
     if (zipPath && fs.existsSync(zipPath)) {
